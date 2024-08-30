@@ -40,7 +40,6 @@ opuesto Norte = Sur
 opuesto Sur   = Norte
 opuesto Este  = Oeste
 opuesto Oeste = Este 
-
 --b)Dadas dos direcciones, indica si son la misma. Nota: utilizar pattern matching y no ==.
 
 iguales :: Dir -> Dir -> Bool

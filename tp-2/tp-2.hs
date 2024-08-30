@@ -272,7 +272,6 @@ proyectos    e = proyectos' rolesDe e
 proyectos' :: [Rol] -> [Proyecto]
 proyectos' [] _ = []
 proyectos' (r:rs) = agregarSiNoExiste (proyecto r) (proyectos'rs) 
-
 agregarSiNoExiste :: Proyecto -> [Proyecto] -> [Proyecto]
 agregarSiNoExiste    p           [        ] =  [p]
 agregarSiNoExiste    p           (p2:ps)    = if esMismoProyecto p p2 
