@@ -268,7 +268,7 @@ proyecto2 = (ConsProyecto "ZB")
 --Dada una empresa denota la lista de proyectos en los que trabaja, sin elementos repetidos.
 proyectos :: Empresa ->             [Proyecto]
 proyectos    e = proyectos' rolesDe e 
-
+ 
 proyectos' :: [Rol] -> [Proyecto]
 proyectos' [] _ = []
 proyectos' (r:rs) = agregarSiNoExiste (proyecto r) (proyectos'rs) 
