@@ -34,7 +34,7 @@ maxDelPar (n,m) = if (n > m)
 
 data Dir = Norte | Este | Sur | Oeste
      deriving Show
-
+ 
 opuesto :: Dir -> Dir
 opuesto Norte = Sur
 opuesto Sur   = Norte
