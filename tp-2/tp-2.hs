@@ -201,21 +201,23 @@ tipo :: Pokemon           -> TipoDePokemon
 tipo    (ConsPokemon t _) =  t
 
 cuantosDeTipo_De_LeGananATodosLosDe_ :: TipoDePokemon -> Entrenador -> Entrenador -> Int
-cuantosDeTipo_De_LeGananATodosLosDe_ t e1 e2 = contarVencedores (filtrarPorTipo t (pokemonesDe e1)) (pokemonesDe e2)
+cuantosDeTipo_De_LeGananATodosLosDe_    t e1 e2 = contarVencedores t (pokemonesDe e1) (pokemonesDe e2)
 
-contarVencedores:: [Pokemon] -> [Pokemon] -> Int
-contarVencedores   _            [       ] =  0
-contarVencedores   [       ]    _         =  0
-contarVencedores   (p1:ps1)     (p2:ps2)  = unoSi (superaA p1 p2 ) + contarVencedores ps1 ps2 
+contarVencedores:: TipoDePokemon ->  [Pokemon] -> [Pokemon] -> Int
+contarVencedores  _ [       ]    _         =  0
+contarVencedores    t (p1:ps1)    ps2  = (unoSi ((esDeTipo p1 t) && (superaATodos p1 ps2))) + contarVencedores t ps1 ps2 
 
-filtrarPorTipo :: TipoDePokemon -> [Pokemon] -> [Pokemon]
-filtrarPorTipo    _                [       ] =  [       ]
-filtrarPorTipo    t                (p:ps)    =  if (tipo p) == t 
-                                                then p:filtrarPorTipo t ps 
-                                                else filtrarPorTipo t ps
+esDeTipo :: Pokemon -> TipoDePokemon -> Bool
+esDeTipo    pk1        t             =  (tipo p1) == t
 
-superaA :: Pokemon -> Pokemon -> Bool
-superaA    pk1        pk2     =  mejorTipo (tipo pk1) (tipo pk2)
+esMismoTipo :: TipoDePokemon -> TipoDePokemon -> Bool
+esMismoTipo    Agua              Agua     = True
+esMismoTipo    Planta           Planta = True
+esMismoTipo
+
+superaATodos:: Pokemon -> [Pokemon] -> Bool
+superaATodos  _    [ ] = True 
+superaATodos   pk1        (pk2:ps)     =  superaA pk1 pk2 && superaATodos pk1 ps 
 
 mejorTipo :: TipoDePokemon -> TipoDePokemon -> Bool
 mejorTipo    Agua             Fuego         =  True
@@ -265,8 +267,11 @@ proyecto2 = (ConsProyecto "ZB")
 
 --Dada una empresa denota la lista de proyectos en los que trabaja, sin elementos repetidos.
 proyectos :: Empresa ->             [Proyecto]
-proyectos    (ConsEmpresa [])     = [        ]
-proyectos    (ConsEmpresa (r:rs)) = agregarSiNoExiste (proyecto r) (proyectos (ConsEmpresa rs))
+proyectos    e = proyectos' rolesDe e 
+
+proyectos' :: [Rol] -> [Proyecto]
+proyectos' [] _ = []
+proyectos' (r:rs) = agregarSiNoExiste (proyecto r) (proyectos'rs) 
 
 agregarSiNoExiste :: Proyecto -> [Proyecto] -> [Proyecto]
 agregarSiNoExiste    p           [        ] =  [p]
@@ -275,7 +280,9 @@ agregarSiNoExiste    p           (p2:ps)    = if esMismoProyecto p p2
                                               else p2:agregarSiNoExiste p ps 
 
 esMismoProyecto :: Proyecto -> Proyecto -> Bool
-esMismoProyecto    p1          p2       =  (p1 == p2)
+esMismoProyecto    (ConsProyecto p1)       (ConsProyecto p2)       =  p1 == p2
+
+
 
 proyecto :: Rol               -> Proyecto 
 proyecto    (Developer _ p)   = p
@@ -284,8 +291,14 @@ promedio    (Management _ p)  = p
 --Dada una empresa indica la cantidad de desarrolladores senior que posee, que pertecen
 --además a los proyectos dados por parámetro.
 losDevSenior :: Empresa -> [Proyecto] -> Int
-losDevSenior (ConsEmpresa []) _       = 0
-losDevSenior (ConsEmpresa (r:rs)) ps  = unoSi (esDevSenior r && perteneceAAlgunProyecto r ps) + losDevSenior (ConsEmpresa rs) ps
+losDevSenior  e  ps = losDevSenior' (rolesDe e ) ps 
+
+rolesDe :: Empresa -> [Rol]
+rolesDe (ConsEmpresa rs) = rs
+
+losDevSenior':: [Rol] -> [Proyecto] -> Int 
+losDevSenior' []    _     =  0 
+losDevSenior' (r:rs) ps = unoSi (esDevSenior r && perteneceAAlgunProyecto r ps) + losDevSenior rs ps
 
 perteneceAAlgunProyecto :: Rol -> [Proyecto] -> Bool
 perteneceAAlgunProyecto    _      [        ] = False 
