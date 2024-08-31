@@ -17,7 +17,7 @@ divisionYResto n m = (div n m, mod n m)
 
 --d) Dado un par de números devuelve el mayor de estos.
 maxDelPar :: (Int,Int) -> Int
-maxDelPar (n,m) = if (n > m) 
+maxDelPar (n,m) = if n > m  
                   then n 
                   else m
 
@@ -91,15 +91,17 @@ empiezaConM    _           =  False
 --   la calidad de la solución respecto de la cantidad de casos analizados (entre los casos
 --   analizados en esta y cualquier subtarea, deberían ser no más de 9 casos)
 vieneDespues :: DiaDeSemana -> DiaDeSemana -> Bool
-vieneDespues    Lunes          Domingo     =  True
-vieneDespues    Martes         Lunes       =  True
-vieneDespues    Miercoles      Martes      =  True
-vieneDespues    Jueves         Miercoles   =  True 
-vieneDespues    Viernes        Jueves      =  True
-vieneDespues    Sabado         Domingo     =  True
-vieneDespues    Domingo        Sabado      =  True 
-vieneDespues    _              _           =  False
- 
+vieneDespues    d1             d2          =  numeroDia d1 > numeroDia d2
+
+numeroDia :: DiaDeSemana -> Int 
+numeroDia    Lunes       =  1 
+numeroDia    Martes      =  2 
+numeroDia    Miercoles   =  3 
+numeroDia    Jueves      =  4 
+numeroDia    Viernes     =  5
+numeroDia    Sabado      =  6 
+numeroDia    Domingo     =  7
+
 --d) Dado un día de la semana indica si no es ni el primer ni el ultimo dia.
 estaEnElMedio :: DiaDeSemana -> Bool
 estaEnElMedio    Lunes       =  False
