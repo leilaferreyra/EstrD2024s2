@@ -124,25 +124,24 @@ negar   False =  True
 --Esta función NO debe realizar doble pattern matching.
 --Nota: no viene implementada en Haskell.
 implica :: Bool -> Bool -> Bool
-implica True    b  = b
-implica  _       _ = True
+implica    True    b    =  b
+implica    _       _    = True
 
 --c) Dados dos booleanos si ambos son True devuelve True, sino devuelve False.
 -- Esta función NO debe realizar doble pattern matching.
 -- En Haskell ya está denida como \&\&.
 
 yTambien :: Bool -> Bool -> Bool
-yTambien True b = b
-yTambien  _    _   = False
+yTambien    True    b    =  b
+yTambien    _       _    =  False
 
 --d) Dados dos booleanos si alguno de ellos es True devuelve True, sino devuelve False.
 --Esta función NO debe realizar doble pattern matching.
 --En Haskell ya está denida como ||.
 
 oBien :: Bool -> Bool -> Bool
-oBien  False   b  = b
-oBien  True   _    = True
-
+oBien    False   b    =  b
+oBien    _       _    = True
 
 --4) REGISTROS
 --  1) Denir el tipo de dato Persona, como un nombre y la edad de la persona. Realizar las
