@@ -30,8 +30,8 @@ disyuncion    (x:xs) =  x || disyuncion xs
 disyuncion    [    ] =  False 
 
 --6. Dada una lista de listas, devuelve una única lista con todos sus elementos.
-aplanar :: [[a]]  -> [a]
-aplanar    (x:xs) =  x ++ aplanar xs 
+aplanar :: [[a]]  -> [a] --ISSUE ARREGLADO
+aplanar    (xs:xss) =  xs ++ aplanar xss
 aplanar    _      =  []
 
 --7. Dados un elemento e y una lista xs devuelve True si existe un elemento en xs que sea igual a e.
@@ -78,9 +78,9 @@ invertir    (x:xs) =  invertir xs ++ [x]
 --14. Dadas dos listas de enteros, devuelve una lista donde el elemento en la posición n es el
 --    máximo entre el elemento n de la primera lista y de la segunda lista, teniendo en cuenta que
 --    las listas no necesariamente tienen la misma longitud.
-zipMaximos :: [Int] -> [Int]  -> [Int]
-zipMaximos     _       [   ]  =  [   ]
-zipMaximos     [  ]    _      =  [   ]
+zipMaximos :: [Int] -> [Int]  -> [Int] --ISSUE ARREGLADO
+zipMaximos     xs      [   ]  =  xs
+zipMaximos     [  ]    ys      =  ys
 zipMaximos     (x:xs)  (y:ys) =  if x > y 
                                  then x : zipMaximos xs ys 
                                  else y : zipMaximos xs ys
@@ -98,13 +98,14 @@ elMinimo             (x:xs) =  if x < elMinimo xs
 --llegar a 0. Si n es 0 devuelve 1. La función es parcial si n es negativo.
 factorial :: Int -> Int
 factorial    0   =  1 
-factorial    n   =  n * factorial (n-1) --Preguntar si hacer caso de error en caso negativo
+factorial    n   =  n * factorial (n-1) 
 
 --2. Dado un número n devuelve una lista cuyos elementos sean los números comprendidos entre
 --   n y 1 (incluidos). Si el número es inferior a 1, devuelve la lista vacía.
-cuentaRegresiva :: Int -> [Int]
-cuentaRegresiva    0   =  [   ]
-cuentaRegresiva    n   =  n : cuentaRegresiva (n-1)
+cuentaRegresiva :: Int -> [Int] --ISSUE ARREGLADO
+cuentaRegresiva    n   = if n < 1
+                         then []
+                         else n : cuentaRegresiva (n-1)
 
 --3. Dado un número n y un elemento e devuelve una lista en la que el elemento e repite n veces.
 repetir :: Int -> a -> [a]
@@ -189,11 +190,11 @@ cantPokemon    e          =  longitud (pokemonesDe e)
 
 --Devuelve la cantidad de Pokémon de determinado tipo    que posee el entrenador.
 cantPokemonDe :: TipoDePokemon -> Entrenador -> Int
-cantPokemonDe    t                e          =  cantPokemonDeAux t (pokemonesDe e)
+cantPokemonDe    t                e          =  cantPokemonDeTipo t (pokemonesDe e)
 
-cantPokemonDeAux :: TipoDePokemon -> [Pokemon] -> Int
-cantPokemonDeAux    _                [       ] =  0 
-cantPokemonDeAux    t                (p:ps)    =  unoSi (esMismoTipo t (tipo p)) + cantPokemonDeAux t ps
+cantPokemonDeTipo :: TipoDePokemon -> [Pokemon] -> Int --ISSUE ARREGLADO (NOMBRE)
+cantPokemonDeTipo    _                [       ] =  0 
+cantPokemonDeTipo    t                (p:ps)    =  unoSi (esMismoTipo t (tipo p)) + cantPokemonDeTipo t ps
                        
 --Dados dos entrenadores, indica la cantidad de Pokemon de cierto tipo, que le ganarían
 --a los Pokemon del segundo entrenador.
@@ -233,21 +234,13 @@ mejorTipo    _                _             =  False
 esMaestroPokemon :: Entrenador -> Bool
 esMaestroPokemon    e          =  hayUnoDeCada (pokemonesDe e)
 
-hayUnoDeCada :: [Pokemon] -> Bool
+hayUnoDeCada :: [Pokemon] -> Bool -- ARREGLADO ISSUE DE SUBTAREAS
 hayUnoDeCada    [       ] =  False 
-hayUnoDeCada    ps        =  hayAgua ps && hayFuego ps && hayPlanta ps
+hayUnoDeCada    ps        =  hayPokemonDeTipo Agua ps && hayPokemonDeTipo Fuego ps && hayPokemonDeTipo Planta ps
 
-hayAgua :: [Pokemon] -> Bool
-hayAgua    [       ] =  False 
-hayAgua    (p:ps)    = esMismoTipo (tipo p) Agua || hayAgua ps
-
-hayFuego :: [Pokemon] -> Bool
-hayFuego    [       ] = False 
-hayFuego    (p:ps)    = esMismoTipo (tipo p) Fuego || hayFuego ps
-
-hayPlanta :: [Pokemon] -> Bool
-hayPlanta    [       ] = False 
-hayPlanta    (p:ps)    = esMismoTipo (tipo p) Planta || hayPlanta ps
+hayPokemonDeTipo :: TipoDePokemon -> [Pokemon] -> Bool
+hayPokemonDeTipo     _               [       ] =  False 
+hayPokemonDeTipo     t               (p:ps)    = esMismoTipo (tipo p) t || hayPokemonDeTipo t ps
 
 --3. El tipo de dato Rol representa los roles (desarollo o management) de empleados IT dentro
 --de una empresa de software, junto al proyecto en el que se encuentran. Así, una empresa es
@@ -288,7 +281,7 @@ esMismoProyecto    (ConsProyecto p1) (ConsProyecto p2) = p1 == p2
 
 proyecto :: Rol               -> Proyecto 
 proyecto    (Developer _ p)   = p
-promedio    (Management _ p)  = p
+proyecto    (Management _ p)  = p
                      
 --Dada una empresa indica la cantidad de desarrolladores senior que posee, que pertecen
 --además a los proyectos dados por parámetro.
@@ -331,3 +324,5 @@ asignadosPorProyecto' :: [Proyecto] -> [Rol]   -> [(Proyecto,Int)]
 asignadosPorProyecto'    [        ]    _       =  []
 asignadosPorProyecto'    (p:ps)        rs      =  (p, cantDeRolEnProyecto p rs):asignadosPorProyecto' ps rs
 
+asignadosPorProyecto :: Empresa -> [(Proyecto,Int)]
+asignadosPorProyecto    e        = 
