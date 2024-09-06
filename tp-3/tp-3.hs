@@ -232,3 +232,38 @@ consACada x (xs:xss) = (x:xs) : consACada x xss
 -- = [ [1], [1,2], [1,2,3], [1,4], [1,4,5] ]
 --OBSERVACIÓN: puede resultar interesante plantear otra función, variación de
 --ésta para devolver solamente los caminos maximales.
+
+--2.2. Expresiones Aritméticas
+--El tipo algebraico ExpA modela expresiones aritméticas de la siguiente manera:
+data ExpA = Valor Int | Sum ExpA ExpA | Prod ExpA ExpA | Neg ExpA
+     deriving Show
+
+--Casos de ejemplo
+x1 = Neg (Sum (Valor 5) (Prod (Valor 5) (Valor 2)))
+--Implementar las siguientes funciones utilizando el esquema de recursión estructural sobre Exp:
+--1. 
+eval :: ExpA -> Int
+eval (Valor n) = n
+eval (Sum e1 e2) = eval e1 + eval e2
+eval (Prod e1 e2) = eval e1 * eval e2
+eval (Neg e) = 0 - eval e
+--Dada una expresión aritmética devuelve el resultado evaluarla.
+--2. 
+--Dada una expresión aritmética, la simplica según los siguientes criterios (descritos utilizando
+--notación matemática convencional):
+--a) 0 + x = x + 0 = x
+--b) 0 * x = x * 0 = 0
+--c) 1 * x = x * 1 = x
+--d) - (- x) = x
+simplificar :: ExpA -> ExpA
+simplificar (Valor n) = Valor n
+simplificar (Sum (Valor 0) e) = simplificar e
+simplificar (Sum e (Valor 0)) = simplificar e
+simplificar (Sum e1 e2) = Sum (simplificar e1) (simplificar e2)
+simplificar (Prod (Valor 0) _) = Valor 0
+simplificar (Prod _ (Valor 0)) = Valor 0
+simplificar (Prod (Valor 1) e) = simplificar e
+simplificar (Prod e (Valor 1)) = simplificar e
+simplificar (Prod e1 e2) = Prod (simplificar e1) (simplificar e2)
+simplificar (Neg (Neg e)) = simplificar e
+simplificar (Neg e) = Neg (simplificar e)
