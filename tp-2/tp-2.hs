@@ -49,15 +49,15 @@ apariciones            e    (x:xs) = unoSi (e==x) + apariciones e xs
 losMenoresA :: Int -> [Int]  -> [Int]
 losMenoresA    _      [   ]  =  [   ] 
 losMenoresA    n      (x:xs) =  if x < n
-                                then   x : losMenoresA n xs
-                                else   losMenoresA n xs 
+                                 then   x : losMenoresA n xs
+                                 else   losMenoresA n xs 
 
 --10. Dados un número n y una lista de listas, devuelve la lista de aquellas listas que tienen más de n elementos.
 lasDeLongitudMayorA :: Int -> [[a]]  -> [[a]]
 lasDeLongitudMayorA    _      [   ]  =  [   ]
 lasDeLongitudMayorA    n      (x:xs) =  if (longitud x) > n 
-                                        then x : lasDeLongitudMayorA n xs 
-                                        else lasDeLongitudMayorA n xs 
+                                         then x : lasDeLongitudMayorA n xs 
+                                         else lasDeLongitudMayorA n xs 
 
  --11. Dados una lista y un elemento, devuelve una lista con ese elemento agregado al nal de la lista.
 agregarAlFinal :: [a] -> a -> [a]
@@ -82,16 +82,16 @@ zipMaximos :: [Int] -> [Int]  -> [Int] --ISSUE ARREGLADO
 zipMaximos     xs      [   ]  =  xs
 zipMaximos     [  ]    ys      =  ys
 zipMaximos     (x:xs)  (y:ys) =  if x > y 
-                                 then x : zipMaximos xs ys 
-                                 else y : zipMaximos xs ys
+                                  then x : zipMaximos xs ys 
+                                  else y : zipMaximos xs ys
     
 --15. Dada una lista devuelve el mínimo
 elMinimo :: Ord a => [a]    -> a
 elMinimo             [ ]    =  error "La lista está vacía"
 elMinimo             (x:[]) =  x
 elMinimo             (x:xs) =  if x < elMinimo xs 
-                               then x 
-                               else elMinimo xs
+                                then x 
+                                else elMinimo xs
 --2. RECURSION SOBRE NUMEROS 
 
 --1. Dado un número n se devuelve la multiplicación de este número y todos sus anteriores hasta
@@ -104,8 +104,8 @@ factorial    n   =  n * factorial (n-1)
 --   n y 1 (incluidos). Si el número es inferior a 1, devuelve la lista vacía.
 cuentaRegresiva :: Int -> [Int] --ISSUE ARREGLADO
 cuentaRegresiva    n   = if n < 1
-                         then []
-                         else n : cuentaRegresiva (n-1)
+                          then []
+                          else n : cuentaRegresiva (n-1)
 
 --3. Dado un número n y un elemento e devuelve una lista en la que el elemento e repite n veces.
 repetir :: Int -> a -> [a]
@@ -143,8 +143,8 @@ edad    (P _ e) =  e
 mayoresA :: Int -> [Persona] -> [Persona]
 mayoresA    _      [       ] =  [       ]
 mayoresA    n      (x:xs)    =  if edad x > n
-                                then x : mayoresA n xs
-                                else mayoresA n xs 
+                                 then x : mayoresA n xs
+                                 else mayoresA n xs 
 
 --Dados una edad y una lista de personas devuelve a las personas mayores a esa edad.
 promedioEdad :: [Persona] -> Int
@@ -160,8 +160,8 @@ elMasViejo :: [Persona] -> Persona
 elMasViejo    [       ] =  error"No hay personas en la lista"
 elMasViejo    (x:[])    = x 
 elMasViejo    (x:xs)    = if (edad x) > edad (elMasViejo xs)
-                          then x 
-                          else elMasViejo xs 
+                           then x 
+                           else elMasViejo xs 
 
 ---Dada una lista de personas devuelve la persona más vieja de la lista. Precondición: la
 --lista al menos posee una persona.
@@ -205,11 +205,12 @@ cuantosDeTipo_De_LeGananATodosLosDe_ :: TipoDePokemon -> Entrenador -> Entrenado
 cuantosDeTipo_De_LeGananATodosLosDe_    t e1 e2 = contarVencedores t (pokemonesDe e1) (pokemonesDe e2)
 
 contarVencedores:: TipoDePokemon ->  [Pokemon] -> [Pokemon] -> Int
-contarVencedores  _ [       ]    _         =  0
-contarVencedores    t (p1:ps1)    ps2  = (unoSi ((esDeTipo p1 t) && (superaATodos p1 ps2))) + contarVencedores t ps1 ps2 
+contarVencedores    _                [       ]    _          = 0
+contarVencedores    t                (p1:ps1)     ps2        = (unoSi ((esDeTipo p1 t) && (superaATodos p1 ps2))) 
+                                                               + contarVencedores t ps1 ps2 
 
 esDeTipo :: Pokemon -> TipoDePokemon -> Bool
-esDeTipo    p1        t             =  esMismoTipo (tipo p1) t 
+esDeTipo    p1         t              =  esMismoTipo (tipo p1) t 
 
 esMismoTipo :: TipoDePokemon -> TipoDePokemon -> Bool
 esMismoTipo    Agua             Agua          = True
@@ -273,8 +274,8 @@ proyectos'    (r:rs) = agregarSiNoExiste (proyecto r) (proyectos' rs)
 agregarSiNoExiste :: Proyecto -> [Proyecto] -> [Proyecto]
 agregarSiNoExiste    p           [        ] =  [p]
 agregarSiNoExiste    p           (p2:ps)    =  if esMismoProyecto p p2 
-                                               then p2:ps 
-                                               else p2:agregarSiNoExiste p ps 
+                                                then p2:ps 
+                                                else p2:agregarSiNoExiste p ps 
 
 esMismoProyecto :: Proyecto -> Proyecto -> Bool
 esMismoProyecto    (ConsProyecto p1) (ConsProyecto p2) = p1 == p2
@@ -286,22 +287,31 @@ proyecto    (Management _ p)  = p
 --Dada una empresa indica la cantidad de desarrolladores senior que posee, que pertecen
 --además a los proyectos dados por parámetro.
 losDevSenior :: Empresa -> [Proyecto] -> Int
-losDevSenior    e          ps         =  losDevSenior' (rolesDe e) ps 
+losDevSenior    e          ps          = losDevSenior' (rolesDe e) ps 
 
 losDevSenior':: [Rol] -> [Proyecto] -> Int 
 losDevSenior' []    _     =  0 
 losDevSenior' (r:rs) ps = unoSi (esDevSenior r && perteneceAAlgunProyecto r ps) + losDevSenior' rs ps
 
-rolesDe :: Empresa -> [Rol]
-rolesDe (ConsEmpresa rs) = rs
+rolesDe :: Empresa        -> [Rol]
+rolesDe   (ConsEmpresa rs) = rs
 
 perteneceAAlgunProyecto :: Rol -> [Proyecto] -> Bool
 perteneceAAlgunProyecto    _      [        ] = False 
-perteneceAAlgunProyecto    r      (p:ps)         = esMismoProyecto (proyecto r) p || perteneceAAlgunProyecto r ps
+perteneceAAlgunProyecto    r      (p:ps)     = esMismoProyecto (proyecto r) p || perteneceAAlgunProyecto r ps
 
-esDevSenior :: Rol -> Bool 
-esDevSenior (Developer Senior _ ) = True 
-esDevSenior _                     = False 
+esDevSenior :: Rol -> Bool  --ISSUE ARREGLADO
+esDevSenior    r   =  (esDev r) && esSenior r 
+esDevSenior    _   = False 
+
+esDev :: Rol            -> Bool 
+esDev   (Developer _ _) = True
+esDev   _               = False 
+
+esSenior:: Rol -> Bool 
+esSenior   (Developer Senior _ )  = True
+esSenior   (Management Senior _ ) = True
+esSenior   _                      = False 
 
 --Indica la cantidad de empleados que trabajan en alguno de los proyectos dados.
 cantQueTrabajanEn :: [Proyecto] -> Empresa   -> Int
@@ -316,13 +326,16 @@ cantDeRolEnProyecto    p           [   ]  =  0
 cantDeRolEnProyecto    p           (r:rs) =  unoSi (esMismoProyecto p (proyecto r)) + cantDeRolEnProyecto p rs
 
 --Devuelve una lista de pares que representa a los proyectos (sin repetir) junto con su
---cantidad de personas involucradas.
+--cantidad de personas involucradas.  --ISSUE ARREGLADO
 asignadosPorProyecto :: Empresa -> [(Proyecto, Int)]
-asignadosPorProyecto    e       =  asignadosPorProyecto' (proyectos e) (rolesDe e)
+asignadosPorProyecto    e       =  asignadosPorProyecto' (rolesDe e)
 
-asignadosPorProyecto' :: [Proyecto] -> [Rol]   -> [(Proyecto,Int)]
-asignadosPorProyecto'    [        ]    _       =  []
-asignadosPorProyecto'    (p:ps)        rs      =  (p, cantDeRolEnProyecto p rs):asignadosPorProyecto' ps rs
+asignadosPorProyecto' :: [Rol] -> [(Proyecto, Int)]
+asignadosPorProyecto'    [   ]  = [               ]
+asignadosPorProyecto'    (r:rs) = agregarProyecto (proyecto r) (asignadosPorProyecto' rs)
 
-asignadosPorProyecto :: Empresa -> [(Proyecto,Int)]
-asignadosPorProyecto    e        = 
+agregarProyecto  :: Proyecto -> [(Proyecto, Int)] -> [(Proyecto, Int)]
+agregarProyecto     p           [               ]  = [(p, 1)]
+agregarProyecto     p1          ((p2, n):ps)       = if  esMismoProyecto p1 p2
+                                                      then (p2, n + 1) : ps
+                                                      else  (p2, n) : agregarProyecto p1 ps
