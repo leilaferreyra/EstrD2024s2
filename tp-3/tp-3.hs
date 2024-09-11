@@ -162,7 +162,7 @@ leaves   (NodeT x d i)           = leaves d ++ leaves i
 
 --7.Dado un árbol devuelve su altura.
 heightT :: Tree a      -> Int
-heightT    Empty        = 0 
+heightT    EmptyT       = 0 
 heightT   (NodeT x i d) = 1 + max (heightT i) (heightT d)
 
 --8. Dado un árbol devuelve el árbol resultante de intercambiar el hijo izquierdo con
