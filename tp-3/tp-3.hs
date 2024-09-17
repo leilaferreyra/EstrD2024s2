@@ -27,12 +27,8 @@ unoSi    False = 0
 
 -- Dado un color y una celda, agrega una bolita de dicho color a la celda.
 poner :: Color -> Celda           -> Celda
-poner    color    CeldaVacia       = Bolita color CeldaVacia
 poner    color    (Bolita c celda) = Bolita c (poner color celda)  
-
-esCeldaVacia :: Celda     -> Bool
-esCeldaVacia    CeldaVacia = True
-esCeldaVacia    _          = False
+poner    color     _               = Bolita color CeldaVacia
 
 --Dado un color y una celda, quita una bolita de dicho color de la celda. Nota: a diferencia de
 --Gobstones, esta función es total.
@@ -55,7 +51,7 @@ data Camino = Fin | Cofre [Objeto] Camino | Nada Camino
      deriving Show
 
 --Casos de ejemplo
-camino1 = (Nada (Cofre [Cacharro] (Nada (Cofre [Tesoro] Fin))))
+camino1 = (Nada (Cofre [Cacharro] (Nada (Cofre [Tesoro, Tesoro] Fin))))
 camino2 = (Nada (Cofre [Tesoro] (Nada(Cofre [Tesoro] Fin))))
 camino3 = (Cofre [Tesoro] Fin)
 camino4 = (Nada (Fin))
@@ -77,18 +73,13 @@ esTesoro   _      =  False
 --Indica la cantidad de pasos que hay que recorrer hasta llegar al primer cofre con un tesoro.
 --Si un cofre con un tesoro está al principio del camino, la cantidad de pasos a recorrer es 0.
 --Precondición: tiene que haber al menos un tesoro.
-pasosHastaTesoro :: Camino -> Int 
-pasosHastaTesoro    c      =  if (hayTesoro c)
-                               then pasosHastaTesoro' c 
-                               else error "No hay tesoros en el camino"
 
---Deberia arrojar un mensaje de error personalizado?
 pasosHastaTesoro' :: Camino    -> Int
+pasosHastaTesoro'   Fin     = error "No hay tesoros en el camino"
 pasosHastaTesoro'   (Cofre o c) = if hayTesoro' o 
                                    then 0 
                                    else 1 + pasosHastaTesoro' c 
 pasosHastaTesoro'    (Nada  c)  = 1 + pasosHastaTesoro' c 
-
 
 
 --Indica si hay un tesoro en una cierta cantidad exacta de pasos. Por ejemplo, si el número de
@@ -100,18 +91,32 @@ hayTesoroEn    n      (Nada c)    = hayTesoroEn (n-1) c
 hayTesoroEn    _       Fin        = False
 
 --Indica si hay al menos n tesoros en el camino.
-alMenosNTesoros :: Int -> Camino     -> Bool
-alMenosNTesoros    0      _           = True 
-alMenosNTesoros    n      (Cofre o c) = hayTesoro' o && alMenosNTesoros (n-1) c
-alMenosNTesoros    n      (Nada c)    = alMenosNTesoros (n-1) c
-alMenosNTesoros    n      Fin         = False 
+alMenosNTesoros  :: Int -> Camino -> Bool --Issue arreglado 
+alMenosNTesoros     n      c = cantTesorosDelCamino c >= n 
+
+cantTesoros :: [Objeto] -> Int
+cantTesoros    [] = 0
+cantTesoros    (o:os) = unoSi (esTesoro o) + cantTesoros os 
+
+objetosDeCamino :: Camino -> [Objeto] 
+objetosDeCamino    (Cofre o c) = o ++ objetosDeCamino c 
+objetosDeCamino    (Nada c )     = objetosDeCamino c 
+objetosDeCamino    _           = []
+
+cantTesorosDelCamino :: Camino -> Int 
+cantTesorosDelCamino    c      = cantTesoros (objetosDeCamino c)
+
+
 --Dado un rango de pasos, indica la cantidad de tesoros que hay en ese rango. Por ejemplo, si
 --el rango es 3 y 5, indica la cantidad de tesoros que hay entre hacer 3 pasos y hacer 5. Están
 --incluidos tanto 3 como 5 en el resultado.
-cantTesorosEntre :: Int -> Int -> Camino -> Int
-cantTesorosEntre n1 n2 camino = if  n1 > n2 
-                                 then 0
-                                 else unoSi (hayTesoroEn n1 camino) + cantTesorosEntre (n1+1) n2 camino
+
+cantTesorosEntre :: Int -> Int -> Camino -> Int --Issue arreglado
+cantTesorosEntre    _ _ Fin = 0
+cantTesorosEntre   i f  (Cofre o c )  = if i<= 1 && f >= 1
+                                         then cantTesoros o + cantTesorosEntre (i - 1) (f - 1) c 
+                                         else cantTesorosEntre (i - 1) (f - 1) c 
+cantTesorosEntre   i f  (Nada c) = cantTesorosEntre (i - 1) (f - 1) c                   
 
 --2. Tipos arbóreos
 --2.1. Árboles binarios
@@ -138,9 +143,9 @@ sizeT    EmptyT        = 0
 sizeT    (NodeT _ d i) = 1 + sizeT d + sizeT i 
 
 --3. Dado un árbol de enteros devuelve un árbol con el doble de cada número.
-mapDobleT :: Tree Int     -> Tree Int
+mapDobleT :: Tree Int     -> Tree Int --Issue arreglado
 mapDobleT    EmptyT       =  EmptyT
-mapDobleT   (NodeT x d i) =  NodeT (x+1) (mapDobleT d) (mapDobleT i)
+mapDobleT   (NodeT x d i) =  NodeT (x*2) (mapDobleT d) (mapDobleT i)
 
 --4. Dados un elemento y un árbol binario devuelve True si existe un elemento igual a ese en el
 --   árbol.
@@ -231,11 +236,11 @@ data ExpA = Valor Int | Sum ExpA ExpA | Prod ExpA ExpA | Neg ExpA
 x1 = Neg (Sum (Valor 5) (Prod (Valor 5) (Valor 2)))
 
 --1. Dada una expresión aritmética devuelve el resultado evaluarla.
-eval :: ExpA       -> Int
+eval :: ExpA       -> Int --Issue arreglado 
 eval   (Valor n)    = n
 eval   (Sum e1 e2)  = eval e1 + eval e2
 eval   (Prod e1 e2) = eval e1 * eval e2
-eval   (Neg e)      = 0 - eval e
+eval   (Neg e)      = - (eval e)
 
 --2. Dada una expresión aritmética, la simplica según los siguientes criterios (descritos utilizando
 --   notación matemática convencional):
@@ -252,9 +257,9 @@ sim4 = Neg (Neg (Valor 6))
 
 simplificar :: ExpA        -> ExpA
 simplificar    (Valor n)    = Valor n
-simplificar    (Sum e1 e2)  = simplificarSuma e1 e2 
-simplificar    (Prod e1 e2) = simplificarProd e1 e2 
-simplificar    (Neg e)      = simplificarNeg e 
+simplificar    (Sum e1 e2)  = simplificarSuma (simplificar e1) (simplificar e2) 
+simplificar    (Prod e1 e2) = simplificarProd (simplificar e1) (simplificar e2) 
+simplificar    (Neg e)      = simplificarNeg (simplificar e)
 
 simplificarSuma :: ExpA ->   ExpA     -> ExpA 
 simplificarSuma    (Valor 0) e         = e

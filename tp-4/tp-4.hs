@@ -132,6 +132,16 @@ heightT ::  Mapa  -> Int
 heightT    (Fin _)       = 0 
 heightT   (Bifurcacion c m1 m2) = 1 + max (heightT m1) (heightT m2)
 
+ramaMasLarga :: Tree a        -> [a]
+ramaMasLarga    EmptyT         = [ ]
+ramaMasLarga   (NodeT x i d)   = x: laMasLarga (ramaMasLarga i) (ramaMasLarga d)
+
+laMasLarga :: [a] -> [a] -> [a]
+laMasLarga     a      b  = if length a > length b 
+                              then a 
+                              else b 
+
+
 --5. tesorosPorNivel :: Mapa -> [[Objeto]]
 --Devuelve los tesoros separados por nivel en el árbol.
 tesorosPorNivel :: Mapa -> [[Objeto]]
@@ -144,8 +154,13 @@ juntarNiveles     xss     [   ]    =  xss
 juntarNiveles    (xs:xss) (ys:yss) = (xs ++ ys) : juntarNiveles xss yss
 
 tesorosDeCofre :: Cofre -> [Objeto]
-tesorosDeCofre (Cofre o) = o 
+tesorosDeCofre (Cofre o) = tesorosDeLista o 
 
+tesorosDeLista :: [Objeto] -> [Objeto] 
+tesorosDeLista []     = []
+tesorosDeLista (o:os) = if (esTesoro o)
+                            then o : tesorosDeLista os
+                            else tesorosDeLista os
 --6. todosLosCaminos :: Mapa -> [[Dir]]
 --Devuelve todos lo caminos en el mapa.
 
@@ -157,4 +172,98 @@ consACada :: a -> [[a]]   -> [[a]]
 consACada    x    [   ]    = [   ]
 consACada    x    (xs:xss) = (x:xs) : consACada x xss 
 
+data Componente = LanzaTorpedos | Motor Int | Almacen [Barril]
+ deriving Show
+data Barril = Comida | Oxigeno | Torpedo | Combustible
+ deriving Show 
+data Sector = S SectorId [Componente] [Tripulante]
+ deriving Show 
+type SectorId = String 
+type Tripulante = String
+data Tree a = EmptyT | NodeT a (Tree a) (Tree a)
+ deriving Show 
+data Nave = N (Tree Sector)
+ deriving Show 
 
+nave = N (NodeT (S "Nave1" [LanzaTorpedos] ["Juan", "Juana"])
+                (NodeT (S "Nave2" [LanzaTorpedos] ["Juan", "Juana"])
+                     EmptyT 
+                     EmptyT)
+                (EmptyT))
+--modelaremos una Nave como un tipo algebraico, el cual nos permite construir una nave espacial,
+--dividida en sectores, a los cuales podemos asignar tripulantes y componentes. La representación
+--es la siguiente:
+
+--1. 
+--Propósito: Devuelve todos los sectores de la nave.
+sectores :: Nave -> [SectorId]
+sectores   (N s)  = sectoresDeTree s 
+
+sectoresDeTree :: Tree Sector -> [SectorId]
+sectoresDeTree    EmptyT    = []
+sectoresDeTree    (NodeT s1 t1 t2) = (sectorId s1) : sectoresDeTree t1 ++ sectoresDeTree t2 
+
+sectorId :: Sector -> SectorId 
+sectorId (S sec _ _) = sec 
+
+--2. 
+--Propósito: Devuelve la suma de poder de propulsión de todos los motores de la nave. Nota:
+--el poder de propulsión es el número que acompaña al constructor de motores.
+poderDePropulsion :: Nave -> Int
+poderDePropulsion  (N s) = poderDePropulsionTree s 
+
+poderDePropulsionT :: Tree Sector -> Int
+poderDePropulsionT    EmptyT = 0 
+poderDePropulsionT   (NodeT s t1 t2 ) =  poderDePropulsionDeSector s + poderDePropulsionT t1 + poderDePropulsionT t2
+
+poderDePropulsionDeSector :: Sector -> Int 
+poderDePropulsionDeSector    (S _ c t ) = poderDePropulsionComponentes c 
+
+
+poderDePropulsionComponentes :: [Componente] -> Int 
+poderDePropulsionComponentes    [] = 0
+poderDePropulsionComponentes    (c:cs) = (poder c) + poderDePropulsionComponentes cs  
+
+poder :: Componente -> Int
+poder    (Motor n) = n
+poder     _        = 0   
+
+--3. 
+--Propósito: Devuelve todos los barriles de la nave.
+barriles :: Nave -> [Barril]
+barriles    (N s) = barrilesDeSectorT s
+
+barrilesDeSectorT :: Tree Sector -> [Barril]
+barrilesDeSectorT    EmptyT = []
+barrilesDeSectorT    (NodeT s t1 t2) = (barrilesDeSector s) ++ barrilesDeSectorT t1 ++ barrilesDeSectorT t2 
+
+barrilesDeSector :: Sector -> [Barril]
+barrilesDeSector   (S _ c t) = barrilesDeComponentes c 
+
+barrilesDeComponentes :: [Componente] -> [Barril]
+barrilesDeComponentes    [] = []
+barrilesDeComponentes    (c:cs) = barrilesDeComponente c ++ barrilesDeComponentes cs 
+
+barrilesDeComponente :: Componente -> [Barril]
+barrilesDeComponente     (Almacen bs) = bs
+barrilesDeComponente     _            = []
+
+--4. 
+--Propósito: Añade una lista de componentes a un sector de la nave.
+--Nota: ese sector puede no existir, en cuyo caso no añade componentes.
+agregarASector :: [Componente] -> SectorId -> Nave -> Nave
+agregarASector    os              id          (N s)   = N (agregarASectorT os id s)
+
+agregarASectorT :: [Componente] -> SectorId -> Tree Sector -> Tree Sector
+agregarASectorT    _              _            EmptyT        = EmptyT
+agregarASectorT   os              id           (NodeT s t1 t2) = if esSector id s 
+                                                                  then (NodeT (agregarComponentesASector os s ) t1 t2)
+                                                                  else (NodeT s (agregarASectorT t1) (agregarASectorT t2))
+
+
+esSector :: SectorId -> Sector -> Bool
+esSector    id1          (S id2 _ _) = id1 == id2
+
+
+agregarComponentesASector :: [Componente] -> Sector -> Sector 
+agregarComponentesASector cs  (S id c t) = (S id (c ++ cs) t )
