@@ -210,7 +210,7 @@ sectorId (S sec _ _) = sec
 --Propósito: Devuelve la suma de poder de propulsión de todos los motores de la nave. Nota:
 --el poder de propulsión es el número que acompaña al constructor de motores.
 poderDePropulsion :: Nave -> Int
-poderDePropulsion  (N s) = poderDePropulsionTree s 
+poderDePropulsion  (N s) = poderDePropulsionT s 
 
 poderDePropulsionT :: Tree Sector -> Int
 poderDePropulsionT    EmptyT = 0 
@@ -251,19 +251,338 @@ barrilesDeComponente     _            = []
 --4. 
 --Propósito: Añade una lista de componentes a un sector de la nave.
 --Nota: ese sector puede no existir, en cuyo caso no añade componentes.
+sectorTieneId :: Sector -> SectorId -> Bool
+sectorTieneId (S sid1 _ _) sid2 = (sid1 == sid2)
+
+arbolTieneSector :: Tree Sector -> SectorId -> Bool
+arbolTieneSector (EmptyT)         _  = False
+arbolTieneSector (NodeT s t1 t2) sid = (sectorTieneId s sid)     || 
+                                       (arbolTieneSector t1 sid) || 
+                                       (arbolTieneSector t2 sid)
+
+naveTieneSector :: Nave -> SectorId -> Bool
+naveTieneSector (N t) sid = arbolTieneSector t sid
+
+sectorConComps :: Sector -> [Componente] -> Sector
+sectorConComps (S sid scs ts) cs = (S sid (scs ++ cs) ts)
+
+arbolConCompsEn :: Tree Sector -> [Componente] -> SectorId -> Tree Sector
+arbolConCompsEn (NodeT s t1 t2) [] _   = (NodeT s t1 t2)
+arbolConCompsEn (NodeT s t1 t2) cs sid = if (sectorTieneId s sid)
+                                            then (NodeT (sectorConComps s cs) t1 t2)
+                                            else (NodeT s (arbolConCompsEn t1 cs sid) (arbolConCompsEn t2 cs sid))  
+
+naveConCompsEn :: Nave -> [Componente] -> SectorId -> Nave
+naveConCompsEn (N t) cs sid = (N (arbolConCompsEn t cs sid))
+
 agregarASector :: [Componente] -> SectorId -> Nave -> Nave
-agregarASector    os              id          (N s)   = N (agregarASectorT os id s)
-
-agregarASectorT :: [Componente] -> SectorId -> Tree Sector -> Tree Sector
-agregarASectorT    _              _            EmptyT        = EmptyT
-agregarASectorT   os              id           (NodeT s t1 t2) = if esSector id s 
-                                                                  then (NodeT (agregarComponentesASector os s ) t1 t2)
-                                                                  else (NodeT s (agregarASectorT t1) (agregarASectorT t2))
+agregarASector [] _ n = n 
+agregarASector cs sid n = if (naveTieneSector n sid) 
+                             then (naveConCompsEn n cs sid)
+                             else n
 
 
-esSector :: SectorId -> Sector -> Bool
-esSector    id1          (S id2 _ _) = id1 == id2
+-- asignarTripulanteA
 
 
-agregarComponentesASector :: [Componente] -> Sector -> Sector 
-agregarComponentesASector cs  (S id c t) = (S id (c ++ cs) t )
+agregarTrip :: Tripulante -> Sector -> Sector
+agregarTrip trip (S sid cs trips) = (S sid cs (trip:trips))
+
+agregarTripAArbolEn :: Tree Sector -> Tripulante -> SectorId -> Tree Sector
+agregarTripAArbolEn (EmptyT)          _   _  = (EmptyT)
+agregarTripAArbolEn (NodeT s t1 t2) trip sid = if (sectorTieneId s sid) 
+                                                    then (NodeT (agregarTrip trip s) t1 t2)
+                                                    else (NodeT s (agregarTripAArbolEn t1 trip sid) (agregarTripAArbolEn t1 trip sid))
+
+arbolConTripEnVarios :: Tripulante -> Tree Sector -> [SectorId] -> Tree Sector 
+arbolConTripEnVarios    _  arb     []     = arb
+arbolConTripEnVarios  trip arb (sid:sids) = arbolConTripEnVarios trip (agregarTripAArbolEn arb trip sid) sids
+
+asignarTripulanteA :: Tripulante -> [SectorId] -> Nave -> Nave
+--Precond: Todos los id de la lista existen en la nave.
+asignarTripulanteA trip ss (N arb) = (N (arbolConTripEnVarios trip arb ss))
+
+
+-- sectoresAsignados 
+
+
+sectoresDeNave :: Nave -> Tree Sector
+sectoresDeNave (N t) = t
+
+pertenece :: Eq a => a -> [a] -> Bool
+pertenece e []      = False
+pertenece e (x:xs)  = x == e || pertenece e xs
+
+tripEstaEnSector :: Tripulante -> Sector -> Bool
+tripEstaEnSector trip (S _ _ trips) = pertenece trip trips
+
+sectoresDeArbolAsignados :: Tripulante -> Tree Sector -> [SectorId]
+sectoresDeArbolAsignados   _        (EmptyT)     = []
+sectoresDeArbolAsignados trip (NodeT sect t1 t2) = (singularSi (sectorId sect) (tripEstaEnSector trip sect)) ++
+                                                   (sectoresDeArbolAsignados trip t1) ++
+                                                   (sectoresDeArbolAsignados trip t2) 
+
+sectoresAsignados :: Tripulante -> Nave -> [SectorId]
+sectoresAsignados trip nave = sectoresDeArbolAsignados trip (sectoresDeNave nave)
+
+singularSi :: a -> Bool -> [a]
+singularSi x True  = x:[]
+singularSi x False = []
+
+-- tripulantes
+
+
+tripulantesDeSector :: Sector -> [Tripulante]
+tripulantesDeSector (S _ _ trips) = trips
+
+tripulantesDeArbol :: Tree Sector -> [Tripulante]
+tripulantesDeArbol (EmptyT)           = []
+tripulantesDeArbol (NodeT sect t1 t2) = tripulantesDeSector sect ++ 
+                                        tripulantesDeArbol t1 ++
+                                        tripulantesDeArbol t2
+
+tripSinRepetir :: [Tripulante] -> [Tripulante]
+tripSinRepetir      []      = []
+tripSinRepetir (trip:trips) = if (pertenece trip trips)
+                            then tripSinRepetir trips
+                            else trip : tripSinRepetir trips
+
+tripulantes :: Nave -> [Tripulante]
+tripulantes (N t) = tripSinRepetir (tripulantesDeArbol t)
+
+type Presa = String -- nombre de presa
+type Territorio = String -- nombre de territorio
+type Nombre = String -- nombre de lobo
+    
+data Lobo = Cazador Nombre [Presa] Lobo Lobo Lobo |
+            Explorador Nombre [Territorio] Lobo Lobo |
+            Cria Nombre 
+    deriving Show
+
+data Manada = M Lobo
+    deriving Show
+
+cria1 = "cria1"
+cria2 = "cria2"
+cria3 = "cria3"
+cria4 = "cria4"
+cria5 = "cria5"
+cria6 = "cria6"
+cria7 = "cria7"
+cria8 = "cria8"
+
+territorio1 = "territorio1"
+territorio2 = "territorio2"
+territorio3 = "territorio3"
+territorio4 = "territorio4"
+
+presa1 = "presa1"
+presa2 = "presa2"
+presa3 = "presa3"
+presa4 = "presa4"
+presa5 = "presa5"
+presa6 = "presa6"
+presa7 = "presa7"
+presa8 = "presa8"
+
+chayton = "chayton"
+
+galileo = "galileo"
+
+kraven = "kraven"
+
+lope = "lope"
+
+ter1 = "ter1"
+ter2 = "ter2"
+ter3 = "ter3"
+
+manada2 = M (Explorador chayton [] 
+                (Explorador lope [ter1,ter2,ter3]  
+                    (Cria cria6) 
+                    (Cria cria7)
+                )
+                (Explorador kraven [ter2]  
+                    (Cria cria6) 
+                    (Cria cria7)
+                )
+            )
+
+manada1 = M (Cazador "firulais" ["obejas", "ratones", "raton", "chancho", "chancho", "chancho"] 
+               (Explorador "roque" ["riogrande", "riochico"]
+                  (Cria "chiquito")
+                  (Cria  "rufus"))
+               (Explorador "neron" ["rioNahuel"]
+                  (Cria "junior")
+                  (Cria  "andy"))
+               (Cria "rabito")
+               )
+-- buenaCaza 
+
+{- Otra forma de escribirlo ?
+
+cantidadDeCrias :: Lobo -> Int
+cantidadDeCrias (Cazador _ _ l1 l2 l3) = cantidadDeCrias l1 +
+                                     cantidadDeCrias l2 + 
+                                     cantidadDeCrias l3
+cantidadDeCrias (Explorador _ _ l1 l2) = cantidadDeCrias l1 +
+                                     cantidadDeCrias l2
+cantidadDeCrias           (_)          = 1
+-}
+
+--Propósito: dada una manada, indica si la cantidad de alimento cazado es mayor a la cantidad de crías.
+cantidadDeCrias :: Lobo -> Int
+cantidadDeCrias        (Cria _)        = 1
+cantidadDeCrias (Cazador _ _ l1 l2 l3) = cantidadDeCrias l1 +
+                                     cantidadDeCrias l2 + 
+                                     cantidadDeCrias l3
+cantidadDeCrias (Explorador _ _ l1 l2) = cantidadDeCrias l1 +
+                                     cantidadDeCrias l2
+
+cantidadDePresas :: Lobo -> Int
+cantidadDePresas (Cazador _ cs l1 l2 l3) = length cs + 
+                                       cantidadDePresas l1 + 
+                                       cantidadDePresas l2 + 
+                                       cantidadDePresas l3
+cantidadDePresas           _             = 0
+
+buenaCaza :: Manada -> Bool 
+buenaCaza (M lobo) = (cantidadDePresas lobo) > (cantidadDeCrias lobo)
+
+
+-- elAlfa
+
+
+mayorAcumulacionDePresas :: Lobo -> Int
+mayorAcumulacionDePresas (Cazador _ ps l1 l2 l3) = max (length ps) (max 
+                                                        (mayorAcumulacionDePresas l1) (max
+                                                            (mayorAcumulacionDePresas l2) (mayorAcumulacionDePresas l3)))
+mayorAcumulacionDePresas (Explorador _ _ l1 l2)  = max (mayorAcumulacionDePresas l1) (mayorAcumulacionDePresas l2)
+mayorAcumulacionDePresas           _           = 0
+
+nombreLobo :: Lobo -> Nombre 
+nombreLobo  (Cazador n _ _ _ _) = n 
+nombreLobo (Explorador n _ _ _) = n 
+nombreLobo   (Cria n)       = n          
+
+loboConPresas :: Lobo -> Int -> Nombre
+loboConPresas (Cazador n ps l1 l2 l3) cant = if ((length ps) == cant)
+                                                then n ++ ";" 
+                                                else "" ++ 
+                                                (loboConPresas l1 cant) ++
+                                                (loboConPresas l2 cant) ++
+                                                (loboConPresas l3 cant) 
+loboConPresas (Explorador _ _ l1 l2)  cant = (loboConPresas l1 cant) ++ 
+                                             (loboConPresas l2 cant) 
+loboConPresas               (_)        _   = ""
+
+buscarAlfaCon :: Lobo -> Int -> Nombre 
+buscarAlfaCon lob 0    = (nombreLobo lob)
+buscarAlfaCon lob cant = (loboConPresas lob cant)
+
+elAlfa :: Manada -> (Nombre, Int)
+--Observacion1 = En caso de haber mas de un alfa devuelve los nombres de todos los alfas separados con un ;
+--Observacion2 = En caso de que no haya ningun alfa, devuelve el primer lobo de la manada
+elAlfa (M lob) = ((buscarAlfaCon lob (mayorAcumulacionDePresas lob)), (mayorAcumulacionDePresas lob))
+
+
+-- losQueExploraron
+
+
+losQueExploraronLobos :: Territorio -> Lobo -> [Nombre]
+losQueExploraronLobos  _           (Cria _)         = [] 
+losQueExploraronLobos ter (Explorador n ters l1 l2) = (singularSi n (pertenece ter ters)) ++
+                                                     (losQueExploraronLobos ter l1) ++
+                                                     (losQueExploraronLobos ter l2)
+losQueExploraronLobos ter (Cazador _ _ l1 l2 l3)    = (losQueExploraronLobos ter l1) ++
+                                                     (losQueExploraronLobos ter l2) ++
+                                                     (losQueExploraronLobos ter l3) 
+
+losQueExploraron :: Territorio -> Manada -> [Nombre]
+losQueExploraron ter (M lob) = losQueExploraronLobos ter lob 
+
+
+-- exploradoresPorTerritorio
+
+
+tersSinRepetir :: [Territorio] -> [Territorio]
+tersSinRepetir []     = []
+tersSinRepetir (t:ts) = if (pertenece t ts)
+                            then tersSinRepetir ts
+                            else t : tersSinRepetir ts
+
+territoriosDe :: Lobo -> [Territorio]
+territoriosDe         (Cria _)          = []
+territoriosDe  (Cazador _ _ l1 l2 l3)   = territoriosDe l1 ++ territoriosDe l2 ++ territoriosDe l3
+territoriosDe (Explorador _ ters l1 l2) = tersSinRepetir (ters ++ territoriosDe l1 ++ territoriosDe l2)
+
+tuplaTerritorioExploradores :: Lobo -> [Territorio] -> [(Territorio, [Nombre])]
+tuplaTerritorioExploradores lob []     = []
+tuplaTerritorioExploradores lob (t:ts) = (t, (losQueExploraronLobs t lob)) : (tuplaTerritorioExploradores lob ts)
+
+exploradoresPorTerritorioDeLobos :: Lobo -> [(Territorio, [Nombre])]
+exploradoresPorTerritorioDeLobos lob = tuplaTerritorioExploradores lob (territoriosDe lob)
+
+exploradoresPorTerritorio :: Manada -> [(Territorio, [Nombre])]
+exploradoresPorTerritorio (M lob) = exploradoresPorTerritorioDeLobos lob
+
+
+-- cazadoresSuperioresDe
+
+
+manadaEj = M (Cazador "DienteFiloso" ["Búfalos", "Antílopes"]
+                (Cria "Hopito")
+                (Explorador "Incansable" ["Oeste hasta el río"]
+                    (Cria "MechónGris")
+                    (Cria "Rabito")
+                )
+                (Cazador "Garras" ["Antílopes", "Ciervos"]
+                    (Explorador "Zarpado" ["Bosque este"]
+                        (Cria "Osado")
+                        (Cazador "Mandíbulas" ["Cerdos", "Pavos"]
+                            (Cria "Desgreñado")
+                            (Cria "Malcriado")
+                            (Cazador "TrituraHuesos" ["Conejos"]
+                                (Cria "Peludo")
+                                (Cria "Largo")
+                                (Cria "Menudo")
+                            )
+                        )
+                    )
+                    (Cria "Garrita")
+                    (Cria "Manchas")
+                )
+            )
+
+
+
+
+cazadoresSuperioresDe :: Nombre -> Manada -> [Nombre]
+--Precondición: hay un lobo con dicho nombre y es unico
+cazadoresSuperioresDe n (M lob) = cazadoresSuperioresDeLobo n lob
+
+
+cazadoresSuperioresDeLobo :: Nombre -> Lobo -> [Nombre]
+cazadoresSuperioresDeLobo n1 (Explorador n2 _ l1 l2) = if (n1 == n2)
+                                                        then []
+                                                        else cazadoresSuperioresDeLobo n1 (loboConSubordinadoEntreDos n1 l1 l2)
+cazadoresSuperioresDeLobo n1 (Cazador n2 _ l1 l2 l3) = if (n1 == n2)
+                                                        then []
+                                                        else n2 : cazadoresSuperioresDeLobo n1 (loboConSubordinadoEntreTres n1 l1 l2 l3)
+cazadoresSuperioresDeLobo _  (Cria _)                = []
+
+
+loboConSubordinadoEntreDos :: Nombre -> Lobo -> Lobo -> Lobo
+loboConSubordinadoEntreDos nom lob1 lob2 = if (loboEstaEn nom lob1)
+                                            then lob1
+                                            else lob2
+
+loboConSubordinadoEntreTres :: Nombre -> Lobo -> Lobo -> Lobo -> Lobo
+loboConSubordinadoEntreTres nom lob1 lob2 lob3 = if (loboEstaEn nom lob1)
+                                                    then lob1
+                                                    else (loboConSubordinadoEntreDos nom lob2 lob3)
+                                                 
+loboEstaEn :: Nombre -> Lobo -> Bool
+loboEstaEn n1 (Cria n2)               = (n1 == n2)
+loboEstaEn n1 (Explorador n2 _ l1 l2) = (n1 == n2) || (loboEstaEn n1 l1) || (loboEstaEn n1 l2)
+loboEstaEn n1 (Cazador n2 _ l1 l2 l3) = (n1 == n2) || (loboEstaEn n1 l1) || (loboEstaEn n1 l2) || (loboEstaEn n1 l3)

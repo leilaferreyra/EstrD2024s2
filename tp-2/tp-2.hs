@@ -332,10 +332,20 @@ asignadosPorProyecto    e       =  asignadosPorProyecto' (rolesDe e)
 
 asignadosPorProyecto' :: [Rol] -> [(Proyecto, Int)]
 asignadosPorProyecto'    [   ]  = [               ]
-asignadosPorProyecto'    (r:rs) = agregarProyecto (proyecto r) (asignadosPorProyecto' rs)
+asignadosPorProyecto'    (r:rs) = cantidadPorProyecto (proyecto r) (asignadosPorProyecto' rs)
 
-agregarProyecto  :: Proyecto -> [(Proyecto, Int)] -> [(Proyecto, Int)]
-agregarProyecto     p           [               ]  = [(p, 1)]
-agregarProyecto     p1          ((p2, n):ps)       = if  esMismoProyecto p1 p2
+cantidadPorProyecto  :: Proyecto -> [(Proyecto, Int)] -> [(Proyecto, Int)]
+cantidadPorProyecto     p           [               ]  = [(p, 1)]
+cantidadPorProyecto     p1          ((p2, n):ps)       = if  esMismoProyecto p1 p2
                                                       then (p2, n + 1) : ps
-                                                      else  (p2, n) : agregarProyecto p1 ps
+                                                      else  (p2, n) : cantidadPorProyecto p1 ps
+                              
+proyecto :: Rol               -> Proyecto 
+proyecto    (Developer _ p)   = p
+proyecto    (Management _ p)  = p
+
+rolesDe :: Empresa        -> [Rol]
+rolesDe   (ConsEmpresa rs) = rs
+
+esMismoProyecto :: Proyecto -> Proyecto -> Bool
+esMismoProyecto    (ConsProyecto p1) (ConsProyecto p2) = p1 == p2
