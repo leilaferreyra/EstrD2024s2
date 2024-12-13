@@ -31,7 +31,6 @@ aplicaAFiltros :: Map String Int -> [Filtro] -> Bool
 aplicaAFiltros _ [] = True
 aplicaAFiltros atributos (f:fs) = aplica atributos f && aplicaAFiltros atributos fs
 
-
 --B 
 filtrar :: Filtro -> Busqueda -> Busqueda 
 -- PROPOSITO: Que dados un filtro y una busqueda aplica el filtro a la lista actual de productos, pudiendo eliminar algunos, 
