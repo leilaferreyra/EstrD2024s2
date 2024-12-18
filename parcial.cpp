@@ -1,7 +1,7 @@
 //Precond: "nombre" existe
 JBSTNodeStr* find(string nombre, JBSTNodeStr* t){
 	JBSTNodeStr* actual = t;
-	while(actual->name!=nombre) {
+	while(current!=null&&current-<name!=name) {
 		if(actual->name<nombre) {
 			actual = actual->right;
 		} else {actual = actual->left;}
@@ -16,29 +16,27 @@ void insertar(string nuevo, string superior, JerarquiaBST t) {
 	nodoN->right = nullptr;
 	nodoN->name = nuevo;
 	nodoN->parent = find(superior,t->root);
-	JBSTNodeStr* actual = t->root;
-	JBSTNodeStr* siguiente;
-	if (nuevo > actual->name) {siguiente = actual->right;}
-	else {siguiente = actual->left} 
+	JBSTNodeStr* prev = nullptr;
+	JBSTNodeStr* current= t->root;
 	while(siguiente != nullptr) {
-		actual = siguiente;
-		if (nuevo > actual->name) {
-			siguiente = actual->right;
+		prev=current;
+		if (current->name>nuevo) {
+			current=current->left;
 		}
-		else {siguiente = actual->left}	
+		else {current=current->right;}	
 	}
-	if (nuevo > actual->name) {
-		actual->right = nodoN;
+	if (prev->name>nuevo) {
+		prev->left=nodoN;
 	}
-	else {actual->left = nodoN;}
+	else {prev->right =nodoN;}
 }
 
 
 bool esSubordinadoDe(string empleado, string superior, JerarquiaBST t) {
 	JBSTNodeStr* actual =find(emplead,t->root);
-	while (actual->parent!=nullptr) {
-		if(actual->parent==superior) {return true;}
-		actual = actual->parent;
+	while (actual->parent!=nullptr && current->name!=superior) {
+		current = current->parent;
 	}
-	return false;
+	return current!=nullptr;
 }
+
