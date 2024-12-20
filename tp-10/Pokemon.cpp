@@ -115,39 +115,27 @@ bool leGanaATodos(Entrenador e1, Entrenador e2)
     return leGanaAlguno(currentPk, e1->pokemon);
 }
 
-bool leGanaAlguno(Pokemon p; Pokemon * ps)
+bool pkLeGanaATodos(Pokemon p; Entrenador e)
 {
-    int vencedores = 0;
-    for (i = 0; superaA(ps[i], p); i++)
+    int vencidos = 0;
+    for (i = 0; (i < e->cantPokemon) && superaA(p, e->pokemon[i]); i++)
     {
-        vencedores++
+        vencidos++
     }
-    return vencedores > 0
-}
-bool leGanaAlguno(Pokemon p, Pokemon *ps)
-{
-    bool encontrado = false;
-    for (int i = 0; ps[i] != nullptr && !encontrado; i++)
-    {
-        Pokemon currentPk = ps[i];
-        if (superaA(currentPk, p))
-        {
-            encontrado = true;
-        }
-    }
-    return encontrado;
+    return vencidos == e->cantPokemon;
 }
 
 bool leGanaATodos(Entrenador e1, Entrenador e2)
 {
-    int totalGanados = 0;
-    Pokemon currentPk = e2->pokemon[0];
-    for (int i = 1; i < e2->cantPokemon && leGanaAlguno(currentPk, e1->pokemon); i++)
+    int vencedores = 0;
+    for (int i = 0; i < e1->cantPokemon; i++)
     {
-        totalGanados++;
-        currentPk = e2->pokemon[i];
+        if (pkLeGanaATodos(e1->pokemon[i], e2))
+        {
+            vencedores++
+        }
     }
-    return totalGanados == e2->cantPokemon;
+    return vencedores > 0;
 }
 
 // Dados dos entrenadores, indica si, para cada pokémon del segundo entrenador, el primero
